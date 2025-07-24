@@ -1,0 +1,64 @@
+# .github/workflows/release.yml
+
+name: Cross-Platform Release Build
+
+# Add permissions for the release job to create a release
+permissions:
+  contents: write
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch: {}
+
+  # Triggers the workflow on a push to any tag (e.g., v1.0.0)
+  push:
+    tags:
+      - '*' # This will match any tag
+
+jobs:
+  # Job to build for Linux
+  build-linux:
+    name: Build for Linux (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: ⚙️ Set up Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: 🚀 Build for Linux
+        run: cargo build --release
+
+      - name: 🔬 Strip Linux binary
+        run: strip target/release/git_info
+
+      - name: 📦 Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: git_info-linux-x86_64
+          path: target/release/git_info
+
+  # New job to create the release
+  create-release:
+    name: 🚢 Create GitHub Release
+    # This job only runs when a tag is pushed
+    if: github.ref_type == 'tag'
+    # It runs after both build jobs have successfully completed
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # The directory where all artifacts will be downloaded
+          path: artifacts/
+
+      - name: 🚀 Create Release and Upload Binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          # This specifies which files to upload. The wildcard matches both binaries.
+          files: artifacts/**/*

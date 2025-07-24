@@ -9,8 +9,8 @@ use std::process::Command;
 fn main() {
     // ─── Run git status in porcelain-v2 mode ──────────────────────────
     let output = match Command::new("git")
-    .args(["status", "--porcelain=v2", "-b"])
-    .output()
+        .args(["status", "--porcelain=v2", "-b"])
+        .output()
     {
         Ok(out) if out.status.success() => out,
         _ => return, // not a Git repo or git missing
@@ -37,12 +37,12 @@ fn main() {
 #[derive(Default)]
 struct RepoStatus {
     branch_head: Option<String>, // e.g. "main" or "(detached)"
-    branch_oid:  Option<String>, // full 40-char hash
-    ahead:       u32,
-    behind:      u32,
-    staged:      u32,
-    unstaged:    u32,
-    untracked:   u32,
+    branch_oid: Option<String>,  // full 40-char hash
+    ahead: u32,
+    behind: u32,
+    staged: u32,
+    unstaged: u32,
+    untracked: u32,
 }
 
 impl RepoStatus {
@@ -87,8 +87,8 @@ impl RepoStatus {
         // Format: "1 XY ...", "2 XY ..." or "u XY ..."
         //        index   worktree
         let mut parts = line.split_whitespace();
-        let _rec_type = parts.next();               // '1', '2', 'u', etc.
-        let xy = parts.next().unwrap_or("..");      // "XY"
+        let _rec_type = parts.next(); // '1', '2', 'u', etc.
+        let xy = parts.next().unwrap_or(".."); // "XY"
 
         let x = xy.chars().nth(0).unwrap_or('.');
         let y = xy.chars().nth(1).unwrap_or('.');
@@ -108,10 +108,10 @@ impl RepoStatus {
             Some("(detached)") | None => {
                 // Fallback to short commit hash
                 self.branch_oid
-                .as_deref()
-                .map(|h| &h[..7])
-                .unwrap_or("DETACHED")
-                .to_string()
+                    .as_deref()
+                    .map(|h| &h[..7])
+                    .unwrap_or("DETACHED")
+                    .to_string()
             }
             Some(name) => name.to_string(),
         };
@@ -120,11 +120,21 @@ impl RepoStatus {
         let mut text = String::with_capacity(64);
         write!(text, " {}", branch_label).unwrap();
 
-        if self.ahead     > 0 { write!(text, " ↑{}", self.ahead).unwrap(); }
-        if self.behind    > 0 { write!(text, " ↓{}", self.behind).unwrap(); }
-        if self.staged    > 0 { write!(text, " [!{}]", self.staged).unwrap(); }
-        if self.unstaged  > 0 { write!(text, " [+{}]", self.unstaged).unwrap(); }
-        if self.untracked > 0 { write!(text, " [?{}]", self.untracked).unwrap(); }
+        if self.ahead > 0 {
+            write!(text, " ↑{}", self.ahead).unwrap();
+        }
+        if self.behind > 0 {
+            write!(text, " ↓{}", self.behind).unwrap();
+        }
+        if self.staged > 0 {
+            write!(text, " [!{}]", self.staged).unwrap();
+        }
+        if self.unstaged > 0 {
+            write!(text, " [+{}]", self.unstaged).unwrap();
+        }
+        if self.untracked > 0 {
+            write!(text, " [?{}]", self.untracked).unwrap();
+        }
 
         // 24-bit colour background + white foreground
         format!("\x1b[38;2;255;255;255;48;2;6;150;154m {} \x1b[0m", text)
