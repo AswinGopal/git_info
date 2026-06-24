@@ -1,3 +1,14 @@
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Mark as pre-release'
+        type: boolean
+        default: false
+
 jobs:
   build-and-release:
     name: Build and Release (Linux x86_64)
@@ -22,4 +33,5 @@ jobs:
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, '-') || inputs.prerelease == 'true' }}
           files: target/release/git_info
