@@ -13,6 +13,8 @@ jobs:
   build-and-release:
     name: Build and Release (Linux x86_64)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
@@ -30,7 +32,6 @@ jobs:
         run: strip target/release/git_info
 
       - name: 🚢 Create Release and Upload Binary
-        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, '-') || inputs.prerelease == 'true' }}
